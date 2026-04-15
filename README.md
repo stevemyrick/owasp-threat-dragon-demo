@@ -63,13 +63,13 @@ These are deliberate design choices for demo purposes. Each maps to a threat in 
 ### Desktop App
 1. Download and install [Threat Dragon](https://github.com/OWASP/threat-dragon/releases)
 2. Open the app and choose **"Open Model from File System"**
-3. Navigate to `threat-model/notes-app.td.json` and open it
+3. Navigate to `notes-app.td.json` and open it
 4. The diagram **"Notes App Data Flow"** will load with all 6 threats pre-populated
 
 ### Web App
 1. Go to [https://www.threatdragon.com](https://www.threatdragon.com)
 2. Choose **"Open Model from File System"**
-3. Select `threat-model/notes-app.td.json`
+3. Select `notes-app.td.json`
 
 Cells with open threats are highlighted in red/orange. Click any component or data flow to inspect its threats, then use the **+ Add Threat** button to add new ones live during your demo.
 
