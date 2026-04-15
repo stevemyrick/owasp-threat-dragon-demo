@@ -1,0 +1,448 @@
+{
+  "version": "2.3.0",
+  "summary": {
+    "title": "Notes App Threat Model",
+    "owner": "Demo",
+    "description": "Threat model for the OWASP Threat Dragon demo Notes application. Covers user authentication, CRUD notes API, and SQLite persistence. Intentional weaknesses in the app map directly to the threats shown here.",
+    "id": 0
+  },
+  "detail": {
+    "contributors": [],
+    "diagrams": [
+      {
+        "id": 0,
+        "title": "Notes App Data Flow",
+        "diagramType": "STRIDE",
+        "placeholder": "New STRIDE diagram description",
+        "thumbnail": "./public/content/images/thumbnail.stride.jpg",
+        "version": "2.4.0",
+        "cells": [
+
+          {
+            "position": { "x": 20, "y": 20 },
+            "size": { "width": 210, "height": 580 },
+            "attrs": { "label": { "text": "Internet" } },
+            "visible": true,
+            "shape": "trust-boundary-box",
+            "id": "tb-internet",
+            "zIndex": -1,
+            "data": {
+              "type": "tm.BoundaryBox",
+              "name": "Internet",
+              "description": "Untrusted external network — traffic from end-user browsers",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            }
+          },
+
+          {
+            "position": { "x": 280, "y": 20 },
+            "size": { "width": 330, "height": 580 },
+            "attrs": { "label": { "text": "Application Zone" } },
+            "visible": true,
+            "shape": "trust-boundary-box",
+            "id": "tb-app",
+            "zIndex": -1,
+            "data": {
+              "type": "tm.BoundaryBox",
+              "name": "Application Zone",
+              "description": "Trusted server-side zone running the Express API and Auth logic",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            }
+          },
+
+          {
+            "position": { "x": 660, "y": 20 },
+            "size": { "width": 220, "height": 580 },
+            "attrs": { "label": { "text": "Data Zone" } },
+            "visible": true,
+            "shape": "trust-boundary-box",
+            "id": "tb-data",
+            "zIndex": -1,
+            "data": {
+              "type": "tm.BoundaryBox",
+              "name": "Data Zone",
+              "description": "Trusted data persistence zone containing the SQLite database",
+              "isTrustBoundary": true,
+              "hasOpenThreats": false
+            }
+          },
+
+          {
+            "position": { "x": 50, "y": 260 },
+            "size": { "width": 160, "height": 80 },
+            "attrs": {
+              "text": { "text": "Browser (User)" },
+              "body": { "stroke": "#333333", "strokeWidth": 1.5, "strokeDasharray": null }
+            },
+            "visible": true,
+            "shape": "actor",
+            "id": "node-browser",
+            "zIndex": 2,
+            "ports": {
+              "groups": {
+                "top":    { "position": "top",    "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "right":  { "position": "right",  "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "bottom": { "position": "bottom", "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "left":   { "position": "left",   "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } }
+              },
+              "items": [
+                { "group": "top",    "id": "browser-top"    },
+                { "group": "right",  "id": "browser-right"  },
+                { "group": "bottom", "id": "browser-bottom" },
+                { "group": "left",   "id": "browser-left"   }
+              ]
+            },
+            "data": {
+              "type": "tm.Actor",
+              "name": "Browser (User)",
+              "description": "End-user browser. Interacts with the Notes app via HTTP.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "providesAuthentication": false,
+              "threats": []
+            }
+          },
+
+          {
+            "position": { "x": 350, "y": 180 },
+            "size": { "width": 120, "height": 120 },
+            "attrs": {
+              "text": { "text": "Express API" },
+              "body": { "stroke": "#333333", "strokeWidth": 1.5, "strokeDasharray": null }
+            },
+            "visible": true,
+            "shape": "process",
+            "id": "node-api",
+            "zIndex": 2,
+            "ports": {
+              "groups": {
+                "top":    { "position": "top",    "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "right":  { "position": "right",  "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "bottom": { "position": "bottom", "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "left":   { "position": "left",   "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } }
+              },
+              "items": [
+                { "group": "top",    "id": "api-top"    },
+                { "group": "right",  "id": "api-right"  },
+                { "group": "bottom", "id": "api-bottom" },
+                { "group": "left",   "id": "api-left"   }
+              ]
+            },
+            "data": {
+              "type": "tm.Process",
+              "name": "Express API",
+              "description": "Node.js/Express server. Handles registration, login, and CRUD notes endpoints.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "privilegeLevel": "",
+              "threats": [
+                {
+                  "id": "threat-0002",
+                  "number": 2,
+                  "title": "IDOR on Note DELETE — Missing Ownership Check",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Tampering",
+                  "description": "The DELETE /notes/:id endpoint removes the note matching :id without verifying that the requesting user owns it. Any authenticated user can delete any other user's notes by guessing or observing note IDs.",
+                  "mitigation": "Add WHERE user_id = ? to the DELETE query and bind it to req.userId. Return 403 Forbidden if the note doesn't belong to the authenticated user.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                },
+                {
+                  "id": "threat-0006",
+                  "number": 6,
+                  "title": "Elevation of Privilege via IDOR",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Elevation of privilege",
+                  "description": "Because note ownership is not validated, an authenticated low-privilege user can operate on data belonging to other users, effectively gaining access to resources beyond their authorisation scope.",
+                  "mitigation": "Enforce user-scoped queries on all note operations. Validate req.userId === note.user_id before any modification. Log and alert on unexpected cross-user access patterns.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                }
+              ]
+            }
+          },
+
+          {
+            "position": { "x": 350, "y": 400 },
+            "size": { "width": 120, "height": 120 },
+            "attrs": {
+              "text": { "text": "Auth Service" },
+              "body": { "stroke": "#333333", "strokeWidth": 1.5, "strokeDasharray": null }
+            },
+            "visible": true,
+            "shape": "process",
+            "id": "node-auth",
+            "zIndex": 2,
+            "ports": {
+              "groups": {
+                "top":    { "position": "top",    "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "right":  { "position": "right",  "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "bottom": { "position": "bottom", "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "left":   { "position": "left",   "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } }
+              },
+              "items": [
+                { "group": "top",    "id": "auth-top"    },
+                { "group": "right",  "id": "auth-right"  },
+                { "group": "bottom", "id": "auth-bottom" },
+                { "group": "left",   "id": "auth-left"   }
+              ]
+            },
+            "data": {
+              "type": "tm.Process",
+              "name": "Auth Service",
+              "description": "Logical sub-component of the Express API responsible for JWT issuance and verification. Hardcoded JWT secret is a key weakness.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "privilegeLevel": "",
+              "threats": [
+                {
+                  "id": "threat-0003",
+                  "number": 3,
+                  "title": "Hardcoded JWT Secret",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Information disclosure",
+                  "description": "The JWT signing secret is hardcoded as 'secret123' in server.js. Anyone with read access to the source code (e.g. a public repo, a leaked build artifact) can forge valid tokens for any user ID.",
+                  "mitigation": "Load the secret from an environment variable (process.env.JWT_SECRET). Rotate the secret immediately if it has been exposed. Use a cryptographically random value of at least 256 bits.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                }
+              ]
+            }
+          },
+
+          {
+            "position": { "x": 700, "y": 265 },
+            "size": { "width": 140, "height": 80 },
+            "attrs": {
+              "text": { "text": "SQLite DB" },
+              "body": { "stroke": "#333333", "strokeWidth": 1.5, "strokeDasharray": null }
+            },
+            "visible": true,
+            "shape": "store",
+            "id": "node-db",
+            "zIndex": 2,
+            "ports": {
+              "groups": {
+                "top":    { "position": "top",    "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "right":  { "position": "right",  "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "bottom": { "position": "bottom", "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } },
+                "left":   { "position": "left",   "attrs": { "circle": { "r": 4, "magnet": true, "stroke": "#5F95FF" } } }
+              },
+              "items": [
+                { "group": "top",    "id": "db-top"    },
+                { "group": "right",  "id": "db-right"  },
+                { "group": "bottom", "id": "db-bottom" },
+                { "group": "left",   "id": "db-left"   }
+              ]
+            },
+            "data": {
+              "type": "tm.Store",
+              "name": "SQLite DB",
+              "description": "SQLite database file storing users (hashed passwords) and notes. Stored on the local filesystem.",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isALog": false,
+              "isEncrypted": false,
+              "isSigned": false,
+              "storesCredentials": true,
+              "storesInventory": false,
+              "threats": []
+            }
+          },
+
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": null,
+                "sourceMarker": { "name": "none" },
+                "targetMarker": { "name": "block" }
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "id": "flow-login-req",
+            "source": { "cell": "node-browser", "port": "browser-right" },
+            "target": { "cell": "node-api",     "port": "api-left"      },
+            "vertices": [{ "x": 265, "y": 240 }],
+            "data": {
+              "type": "tm.Flow",
+              "name": "Login Request",
+              "description": "POST /login — username and password sent in plaintext over HTTP",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": true,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": true,
+              "protocol": "HTTP",
+              "threats": [
+                {
+                  "id": "threat-0001",
+                  "number": 1,
+                  "title": "Brute Force on /login — No Rate Limiting",
+                  "status": "Open",
+                  "severity": "High",
+                  "type": "Spoofing",
+                  "description": "The /login endpoint has no rate limiting or account lockout. An attacker can make unlimited automated password guesses against any username, enabling credential brute-force attacks.",
+                  "mitigation": "Apply express-rate-limit to /login (e.g. max 10 requests per 15 minutes per IP). Add progressive delay or account lockout after N consecutive failures. Consider CAPTCHA for repeated failures.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                },
+                {
+                  "id": "threat-0004",
+                  "number": 4,
+                  "title": "Notes Data in Transit — No HTTPS Enforcement",
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Information disclosure",
+                  "description": "The application does not enforce HTTPS. Login credentials and note contents are transmitted in cleartext, making them visible to anyone on the network path (e.g. a coffee-shop Wi-Fi attacker).",
+                  "mitigation": "Deploy behind a TLS-terminating reverse proxy (nginx, Caddy). Send the Strict-Transport-Security (HSTS) header. Redirect all HTTP traffic to HTTPS.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                },
+                {
+                  "id": "threat-0005",
+                  "number": 5,
+                  "title": "Denial of Service — Unrestricted Request Volume",
+                  "status": "Open",
+                  "severity": "Medium",
+                  "type": "Denial of service",
+                  "description": "No rate limiting exists on any endpoint. An attacker can flood the API with requests, exhausting the Node.js event loop and making the application unavailable to legitimate users.",
+                  "mitigation": "Apply global rate limiting with express-rate-limit. Set request body size limits (express.json({ limit: '10kb' })). Use a WAF or CDN-level DDoS protection in production.",
+                  "modelType": "STRIDE",
+                  "new": false,
+                  "score": ""
+                }
+              ]
+            }
+          },
+
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": null,
+                "sourceMarker": { "name": "none" },
+                "targetMarker": { "name": "block" }
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "id": "flow-notes-api",
+            "source": { "cell": "node-browser", "port": "browser-right" },
+            "target": { "cell": "node-api",     "port": "api-left"      },
+            "vertices": [{ "x": 265, "y": 310 }],
+            "data": {
+              "type": "tm.Flow",
+              "name": "Notes API Call",
+              "description": "GET/POST/DELETE /notes — JWT-authenticated requests to read, create, and delete notes",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isBidirectional": false,
+              "isEncrypted": false,
+              "isPublicNetwork": true,
+              "protocol": "HTTP",
+              "threats": []
+            }
+          },
+
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": "5 3",
+                "sourceMarker": { "name": "none" },
+                "targetMarker": { "name": "block" }
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "id": "flow-auth-check",
+            "source": { "cell": "node-api",  "port": "api-bottom"  },
+            "target": { "cell": "node-auth", "port": "auth-top"    },
+            "vertices": [],
+            "data": {
+              "type": "tm.Flow",
+              "name": "Auth Check",
+              "description": "Express API delegates JWT verification and bcrypt comparison to the Auth Service logic (internal call)",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isBidirectional": true,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "In-process",
+              "threats": []
+            }
+          },
+
+          {
+            "shape": "flow",
+            "attrs": {
+              "line": {
+                "stroke": "#333333",
+                "strokeWidth": 1.5,
+                "strokeDasharray": null,
+                "sourceMarker": { "name": "none" },
+                "targetMarker": { "name": "block" }
+              }
+            },
+            "width": 200,
+            "height": 100,
+            "zIndex": 10,
+            "connector": "smooth",
+            "id": "flow-db-query",
+            "source": { "cell": "node-api", "port": "api-right" },
+            "target": { "cell": "node-db",  "port": "db-left"   },
+            "vertices": [],
+            "data": {
+              "type": "tm.Flow",
+              "name": "DB Query",
+              "description": "SQL queries via better-sqlite3: read/write users and notes",
+              "outOfScope": false,
+              "reasonOutOfScope": "",
+              "hasOpenThreats": false,
+              "isBidirectional": true,
+              "isEncrypted": false,
+              "isPublicNetwork": false,
+              "protocol": "SQLite (file)",
+              "threats": []
+            }
+          }
+
+        ]
+      }
+    ],
+    "diagramTop": 1,
+    "reviewer": "",
+    "threatTop": 6
+  }
+}

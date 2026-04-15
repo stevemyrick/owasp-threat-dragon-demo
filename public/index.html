@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notes App — Threat Dragon Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f6f9;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      padding: 2rem;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    h1 { font-size: 1.4rem; margin-bottom: 1.25rem; color: #1a1a2e; }
+    h2 { font-size: 1.1rem; margin-bottom: 1rem; color: #1a1a2e; }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.55rem 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn-row { display: flex; gap: 0.5rem; }
+
+    button {
+      flex: 1;
+      padding: 0.55rem 0.75rem;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-primary:hover { background: #4338ca; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #ef4444; color: white; font-size: 0.8rem; flex: none; padding: 0.3rem 0.6rem; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-logout { background: #6b7280; color: white; }
+
+    .error { color: #dc2626; font-size: 0.85rem; margin-bottom: 0.5rem; min-height: 1.2em; }
+    .success { color: #16a34a; font-size: 0.85rem; margin-bottom: 0.5rem; min-height: 1.2em; }
+
+    #notes-panel { display: none; }
+
+    ul#notes-list {
+      list-style: none;
+      margin-bottom: 1.25rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+
+    ul#notes-list li {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+      color: #374151;
+      word-break: break-word;
+    }
+
+    .note-body { flex: 1; }
+    .note-meta { font-size: 0.75rem; color: #9ca3af; margin-top: 2px; }
+
+    .divider { border: none; border-top: 1px solid #e5e7eb; margin: 1.25rem 0; }
+
+    .user-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    #logged-in-as { font-size: 0.85rem; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="card">
+
+    <!-- Auth panel -->
+    <div id="auth-panel">
+      <h1>Notes App</h1>
+      <input type="text" id="username" placeholder="Username" autocomplete="username" />
+      <input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+      <div id="auth-msg" class="error"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="login()">Log In</button>
+        <button class="btn-secondary" onclick="register()">Register</button>
+      </div>
+    </div>
+
+    <!-- Notes panel -->
+    <div id="notes-panel">
+      <div class="user-bar">
+        <h2>My Notes</h2>
+        <span id="logged-in-as"></span>
+      </div>
+
+      <ul id="notes-list"></ul>
+
+      <hr class="divider" />
+
+      <textarea id="note-body" placeholder="Write a new note…"></textarea>
+      <div id="notes-msg" class="error"></div>
+      <div class="btn-row">
+        <button class="btn-primary" onclick="addNote()">Add Note</button>
+        <button class="btn-logout" onclick="logout()">Log Out</button>
+      </div>
+    </div>
+
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
